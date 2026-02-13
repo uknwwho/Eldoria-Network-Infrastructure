@@ -1,0 +1,31 @@
+Bash
+enable
+conf t
+hostname Terranova
+interface g0/0/0
+ip address 172.16.8.1 255.255.252.0
+no shut
+exit
+interface s0/1/1
+ip address 172.16.18.70 255.255.255.252
+no shut
+exit
+interface s0/2/0
+ip address 172.16.18.77 255.255.255.252
+no shut
+exit
+interface s0/1/0
+ip address 172.16.18.81 255.255.255.252
+no shut
+exit
+ip route 172.16.12.0 255.255.252.0 172.16.18.69
+ip route 172.16.0.0 255.255.248.0 172.16.18.69
+router rip
+version 2
+no auto-summary
+network 172.16.8.0
+network 172.16.18.76
+network 172.16.18.80
+redistribute static
+passive-interface g0/0/0
+exit
