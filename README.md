@@ -8,7 +8,6 @@ Eldoria, a land divided into four nations (Aeris, Pyron, Tundra, Terranova) and 
 As the lead engineer for the **Council of Connectivity**, I designed and implemented a unified network infrastructure that adheres to strict geopolitical constraints, diverse topographical challenges, and varying security levels.
 
 ![Network Topology](topology_diagram.png)
-*(Note: Upload a screenshot of your topology and name it topology_diagram.png)*
 
 ## 🛠️ Technical Key Features
 * **Variable Length Subnet Masking (VLSM):** optimized a single address block to support over 3,800 devices across 5 distinct subnets with zero overlap.
