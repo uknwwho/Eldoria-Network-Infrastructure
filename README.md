@@ -9,36 +9,60 @@ As the lead engineer for the **Council of Connectivity**, I designed and impleme
 
 ![Network Topology](topology_diagram.png)
 
-## 🛠️ Technical Key Features
-* **Variable Length Subnet Masking (VLSM):** optimized a single address block to support over 3,800 devices across 5 distinct subnets with zero overlap.
-* **Hybrid Routing Architecture:**
-    * **Static Routing:** Implemented for high-security links (Aeris & Pyron).
-    * **Dynamic Routing (RIPv2):** Used for adaptable, weather-prone regions (Tundra & Terranova).
-    * **Floating Static Routes:** Created backup paths (AD 25) for Aeris to ensure redundancy.
-* **DHCP Hierarchy:**
-    * **Central Authority:** Terranova router acts as the DHCP server for itself, Tundra, and Umbra.
-    * **DHCP Relay:** Configured on Tundra and Umbra routers to forward requests across subnets.
-    * **Local Scope:** Pyron manages its own independent DHCP pool.
-* **Core Services:**
-    * **DNS & Web:** "Aeris-Alliance" web server (Fixed IP).
-    * **Email:** Functional SMTP/POP3 services between Pyron and Terranova for intelligence sharing.
+## 🛠️ Technical Specifications
 
-## 🗺️ Nation Specifications & Constraints
+### 1. VLSM Addressing Architecture
+[cite_start]The network is divided into 5 primary LAN subnets and multiple WAN links using a custom VLSM tree[cite: 1, 3]:
 
-| Nation | Environment | Routing/IP Strategy | Role |
-| :--- | :--- | :--- | :--- |
-| **Aeris** | Skyborne Islands | Static IPs, Static Routing | **DNS/Web Host.** High security, zero tolerance for breaches. |
-| **Pyron** | Volcanic Strongholds | Local DHCP, Static Routing | **Military Intel.** Requires rapid mobility and Email exchange. |
-| **Tundra** | Iced Caverns | DHCP (via Relay), RIPv2 | **Redundancy.** Prone to outages; uses dynamic routing for survival. |
-| **Terranova** | Riverlands | Central DHCP Server, RIPv2 | **Logistics Core.** Assigns IPs to Tundra & Umbra. Hosts Email. |
-| **Umbra** | Rogue Caves | DHCP (via Relay), Restricted | **Surveillance.** Traffic strictly controlled. Cannot route directly to Aeris. |
+| Nation | Subnet ID | Mask | CIDR | Usable Hosts | Gateway IP |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Aeris** | 172.16.0.0 | 255.255.248.0 | /21 | 1520 | 172.16.0.1 |
+| **Terranova** | 172.16.8.0 | 255.255.252.0 | /22 | 1020 | 172.16.8.1 |
+| **Pyron** | 172.16.12.0 | 255.255.252.0 | /22 | 830 | 172.16.12.1 |
+| **Tundra** | 172.16.16.0 | 255.255.254.0 | /23 | 410 | 172.16.16.1 |
+| **Umbra** | 172.16.18.0 | 255.255.255.192 | /26 | 45 | 172.16.18.1 |
 
-## ⚙️ Configuration Highlights
+### 2. Routing Protocols
+* [cite_start]**Static Routing:** Implemented for high-security zones (Aeris & Pyron) to strictly control traffic paths[cite: 62, 92].
+* [cite_start]**RIPv2 Dynamic Routing:** Deployed in Terranova and Tundra to handle unstable connections and simplify redundancy[cite: 141, 170].
+* [cite_start]**Floating Static Route:** Aeris is configured with a backup route to Tundra (via Pyron) with an Administrative Distance (AD) of 25, ensuring connectivity if the primary dynamic route fails[cite: 89].
 
-### 1. Centralized DHCP & Relay
-Terranova acts as the server, but Tundra clients are on a different network. I used the `ip helper-address` command on the Tundra Gateway interface to relay requests.
+### 3. DHCP & Relay Configuration
+* [cite_start]**Central Server:** Terranova (`172.16.8.10`) acts as the central DHCP server for Terranova, Tundra, and Umbra[cite: 58].
+* [cite_start]**DHCP Relay:** Tundra and Umbra routers use the `ip helper-address 172.16.8.10` command to forward broadcast requests across the WAN[cite: 157, 177].
+* [cite_start]**Local Scope:** Pyron maintains its own isolated DHCP server for military security[cite: 56].
+
+## ⚙️ Key Configuration Snippets
+
+**Aeris Router (Static & Backup)**
 ```cisco
-! On Tundra Router Interface
-interface GigabitEthernet0/0
- ip address [Tundra_Gateway_IP] [Subnet_Mask]
- ip helper-address [Terranova_Server_IP]
+interface s0/1/1
+ description PRIMARY_LINK_TO_TUNDRA
+ ip address 172.16.18.85 255.255.255.252
+!
+ip route 172.16.16.0 255.255.254.0 172.16.18.65 25  <-- Floating Static Route
+
+**Tundra Router (DHCP Relay)**
+```cisco
+interface g0/0/0
+ ip address 172.16.16.1 255.255.254.0
+ ip helper-address 172.16.8.10  <-- Forwards requests to Terranova Server
+
+**Terranova Router (RIPv2)**
+```cisco
+router rip
+ version 2
+ network 172.16.8.0
+ redistribute static  <-- Shares static routes with RIP neighbors
+
+ 🚀 How to Run
+1. Download: Clone this repository and open Four_Nations_Final.pkt in Cisco Packet Tracer.
+
+2. Verify Web Services: Access www.aeris-alliance.net from any PC to see the "Peace Through Connection" site (Hosted on Aeris Server).
+
+3. Test Email: Send an email from User@Pyron to User@Terranova to verify the SMTP link.
+
+4. Check Redundancy: Use "Simulation Mode" to trace packets from Aeris to Tundra to see the primary vs. backup path selection.
+
+📝 License
+This project was created for educational purposes.
